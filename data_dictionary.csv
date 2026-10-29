@@ -1,0 +1,177 @@
+table_name,column_name,description,key_type
+01_dim_clients,client_id,Unique client identifier,PK
+01_dim_clients,client_name,Client legal/display name,
+01_dim_clients,client_type,Institutional / Corporate / HNI / Retail / Sovereign Wealth Fund,
+01_dim_clients,country,Client domicile country,
+01_dim_clients,region,AMERICAS / EMEA / APAC,
+01_dim_clients,kyc_status,Approved / Pending Review / Expired / Under Investigation (contains nulls),
+01_dim_clients,relationship_manager_id,Owning RM,FK -> 02_dim_employees.employee_id
+01_dim_clients,onboarding_date,Date client relationship began,
+01_dim_clients,risk_rating,Low / Medium / High,
+01_dim_clients,aum_usd,Assets under management in USD,
+02_dim_employees,employee_id,Unique employee identifier,PK
+02_dim_employees,employee_name,Employee display name,
+02_dim_employees,role,"Trader, Sales-Trader, Analyst, Risk Manager, Compliance Officer, RM, Quant, Ops, Desk Head",
+02_dim_employees,desk_id,Assigned desk,FK -> 04_dim_desks.desk_id
+02_dim_employees,office_id,Assigned office,FK -> 03_dim_offices.office_id
+02_dim_employees,hire_date,Date of hire,
+02_dim_employees,seniority_level,Analyst / Associate / VP / Director / Managing Director,
+03_dim_offices,office_id,Unique office identifier,PK
+03_dim_offices,city,Office city,
+03_dim_offices,country,Office country,
+03_dim_offices,region,AMERICAS / EMEA / APAC,
+03_dim_offices,timezone,Local timezone code,
+04_dim_desks,desk_id,Unique desk identifier,PK
+04_dim_desks,desk_name,Desk display name,
+04_dim_desks,business_unit,"Fixed Income, Equities, FX & Rates, Commodities, Prime Brokerage, Derivatives, Credit Trading, Structured Products, Wealth Management, IB Advisory",
+04_dim_desks,office_id,Desk's home office,FK -> 03_dim_offices.office_id
+04_dim_desks,cost_center,Internal cost center code,
+05_dim_instruments,instrument_id,Unique instrument identifier,PK
+05_dim_instruments,ticker,4-letter synthetic ticker,
+05_dim_instruments,instrument_type,"Equity, Government Bond, Corporate Bond, FX Spot, FX Forward, IRS, Equity Option, Future, Commodity, ETF",
+05_dim_instruments,issuer_name,Issuer/underlying name,
+05_dim_instruments,sector,GICS-style sector,
+05_dim_instruments,currency,Trading currency,FK -> 07_dim_currencies.currency_code
+05_dim_instruments,exchange,Listing venue,
+05_dim_instruments,issue_date,Issue/listing date,
+05_dim_instruments,maturity_date,Maturity date (bonds/swaps/forwards/futures only; blank otherwise),
+06_dim_counterparties,counterparty_id,Unique counterparty identifier,PK
+06_dim_counterparties,counterparty_name,Counterparty display name,
+06_dim_counterparties,counterparty_type,"Bank, Broker-Dealer, Hedge Fund, Pension Fund, Exchange, Corporate, Central Bank, Insurance Co",
+06_dim_counterparties,country,Counterparty domicile,
+06_dim_counterparties,region,AMERICAS / EMEA / APAC,
+06_dim_counterparties,credit_rating,AAA..CCC / NR,
+06_dim_counterparties,lei_code,Synthetic Legal Entity Identifier,
+07_dim_currencies,currency_code,ISO-style currency code,PK
+07_dim_currencies,currency_name,Currency display name,
+07_dim_currencies,region,AMERICAS / EMEA / APAC,
+08_dim_products,product_id,Unique product identifier,PK
+08_dim_products,product_name,Product display name,
+08_dim_products,asset_class,Equity / Fixed Income / FX / Commodity / Derivatives / Multi-Asset,
+08_dim_products,risk_category,Low / Medium / High / Very High,
+09_dim_accounts,account_id,Unique account identifier,PK
+09_dim_accounts,client_id,Owning client,FK -> 01_dim_clients.client_id
+09_dim_accounts,account_type,Custody / Trading / Margin / Cash Management / Advisory,
+09_dim_accounts,base_currency,Account base currency,FK -> 07_dim_currencies.currency_code
+09_dim_accounts,desk_id,Servicing desk,FK -> 04_dim_desks.desk_id
+09_dim_accounts,open_date,Account open date,
+09_dim_accounts,status,Active / Dormant / Closed,
+10_dim_risk_limits,limit_id,Unique limit identifier,PK
+10_dim_risk_limits,desk_id,Desk the limit applies to,FK -> 04_dim_desks.desk_id
+10_dim_risk_limits,product_id,Product the limit applies to,FK -> 08_dim_products.product_id
+10_dim_risk_limits,limit_type,VaR Limit / Notional Limit / Concentration Limit / Stop Loss,
+10_dim_risk_limits,limit_amount_usd,Approved limit amount,
+10_dim_risk_limits,effective_date,Date limit became effective,
+11_fact_trades,trade_id,Unique trade identifier (small % intentional duplicates),PK*
+11_fact_trades,trade_date,Trade execution date,
+11_fact_trades,settlement_date,Expected settlement date,
+11_fact_trades,account_id,Executing account,FK -> 09_dim_accounts.account_id
+11_fact_trades,instrument_id,Instrument traded,FK -> 05_dim_instruments.instrument_id
+11_fact_trades,trader_id,Executing trader,FK -> 02_dim_employees.employee_id
+11_fact_trades,counterparty_id,Trade counterparty,FK -> 06_dim_counterparties.counterparty_id
+11_fact_trades,desk_id,Booking desk,FK -> 04_dim_desks.desk_id
+11_fact_trades,side,Buy / Sell,
+11_fact_trades,quantity,Trade quantity,
+11_fact_trades,price,Execution price (contains ~0.5% nulls intentionally),
+11_fact_trades,currency,Trade currency,
+11_fact_trades,notional_usd,quantity x price in USD,
+11_fact_trades,trade_status,Executed / Confirmed / Cancelled / Amended,
+12_fact_trade_settlements,settlement_id,Unique settlement record identifier,PK
+12_fact_trade_settlements,trade_id,Related trade,FK -> 11_fact_trades.trade_id
+12_fact_trade_settlements,settlement_date,Actual/expected settlement date,
+12_fact_trade_settlements,settlement_status,Settled / Pending / Failed,
+12_fact_trade_settlements,settlement_amount_usd,Cash settled amount,
+12_fact_trade_settlements,fail_reason,Populated only when status = Failed,
+13_fact_positions_daily,position_id,Unique position snapshot identifier,PK
+13_fact_positions_daily,position_date,Snapshot date,
+13_fact_positions_daily,account_id,Position-holding account,FK -> 09_dim_accounts.account_id
+13_fact_positions_daily,instrument_id,Instrument held,FK -> 05_dim_instruments.instrument_id
+13_fact_positions_daily,quantity,Position quantity (can be negative = short),
+13_fact_positions_daily,market_value_usd,Mark-to-market value,
+13_fact_positions_daily,cost_basis_usd,Cost basis,
+13_fact_positions_daily,unrealized_pnl_usd,market_value_usd - cost_basis_usd,
+14_fact_market_prices,price_id,Unique price record identifier,PK
+14_fact_market_prices,price_date,Pricing date,
+14_fact_market_prices,instrument_id,Priced instrument,FK -> 05_dim_instruments.instrument_id
+14_fact_market_prices,open_price,Daily open,
+14_fact_market_prices,high_price,Daily high,
+14_fact_market_prices,low_price,Daily low,
+14_fact_market_prices,close_price,Daily close,
+14_fact_market_prices,volume,Traded volume,
+14_fact_market_prices,currency,Pricing currency,
+15_fact_pnl_daily,pnl_id,Unique P&L record identifier,PK
+15_fact_pnl_daily,pnl_date,P&L date,
+15_fact_pnl_daily,desk_id,Desk generating P&L,FK -> 04_dim_desks.desk_id
+15_fact_pnl_daily,account_id,Account contributing P&L,FK -> 09_dim_accounts.account_id
+15_fact_pnl_daily,realized_pnl_usd,Realized P&L,
+15_fact_pnl_daily,unrealized_pnl_usd,Unrealized P&L,
+15_fact_pnl_daily,total_pnl_usd,realized + unrealized,
+16_fact_var_daily,var_id,Unique VaR record identifier,PK
+16_fact_var_daily,var_date,VaR calculation date,
+16_fact_var_daily,desk_id,Desk measured,FK -> 04_dim_desks.desk_id
+16_fact_var_daily,portfolio_account_id,Portfolio/account measured,FK -> 09_dim_accounts.account_id
+16_fact_var_daily,var_1day_99_usd,1-day 99% VaR,
+16_fact_var_daily,var_10day_99_usd,10-day 99% VaR (scaled),
+16_fact_var_daily,methodology,Historical Simulation / Monte Carlo / Parametric,
+17_fact_cash_flows,cashflow_id,Unique cash flow identifier,PK
+17_fact_cash_flows,account_id,Affected account,FK -> 09_dim_accounts.account_id
+17_fact_cash_flows,flow_date,Cash flow date,
+17_fact_cash_flows,flow_type,Deposit / Withdrawal / Interest / Fee / Dividend / Coupon,
+17_fact_cash_flows,amount_usd,Signed cash amount,
+17_fact_cash_flows,currency,Cash flow currency,
+18_fact_corporate_actions,action_id,Unique corporate action identifier,PK
+18_fact_corporate_actions,instrument_id,Affected instrument,FK -> 05_dim_instruments.instrument_id
+18_fact_corporate_actions,action_type,Dividend / Stock Split / Merger / Spinoff / Rights Issue / Buyback,
+18_fact_corporate_actions,action_date,Effective date,
+18_fact_corporate_actions,ratio_or_amount,Action ratio or cash amount,
+19_fact_compliance_alerts,alert_id,Unique alert identifier,PK
+19_fact_compliance_alerts,alert_date,Alert raised date,
+19_fact_compliance_alerts,account_id,Related account,FK -> 09_dim_accounts.account_id
+19_fact_compliance_alerts,trade_id,Related trade (if applicable),FK -> 11_fact_trades.trade_id
+19_fact_compliance_alerts,alert_type,"Large Trade, Unusual Pattern, Sanctions Screening, Wash Trade Suspicion, Insider Trading Flag, Limit Breach",
+19_fact_compliance_alerts,severity,Low / Medium / High / Critical,
+19_fact_compliance_alerts,status,Open / Under Review / Closed - False Positive / Closed - Escalated,
+19_fact_compliance_alerts,assigned_to,Compliance officer assigned,FK -> 02_dim_employees.employee_id
+20_fact_kyc_reviews,review_id,Unique KYC review identifier,PK
+20_fact_kyc_reviews,client_id,Reviewed client,FK -> 01_dim_clients.client_id
+20_fact_kyc_reviews,review_date,Review date,
+20_fact_kyc_reviews,review_type,Periodic Review / Trigger Event Review / Initial Onboarding,
+20_fact_kyc_reviews,outcome,Approved / Approved with Conditions / Escalated / Rejected,
+20_fact_kyc_reviews,reviewer_id,Reviewing employee,FK -> 02_dim_employees.employee_id
+20_fact_kyc_reviews,next_review_date,review_date + 365 days,
+21_fact_credit_exposures,exposure_id,Unique exposure record identifier,PK
+21_fact_credit_exposures,counterparty_id,Exposed counterparty,FK -> 06_dim_counterparties.counterparty_id
+21_fact_credit_exposures,exposure_date,Exposure snapshot date,
+21_fact_credit_exposures,exposure_amount_usd,Exposure amount,
+21_fact_credit_exposures,exposure_type,Current Exposure / Potential Future Exposure / Settlement Risk,
+21_fact_credit_exposures,netting_agreement,ISDA / CSA / None,
+22_fact_collateral_positions,collateral_id,Unique collateral record identifier,PK
+22_fact_collateral_positions,counterparty_id,Posting counterparty,FK -> 06_dim_counterparties.counterparty_id
+22_fact_collateral_positions,position_date,Snapshot date,
+22_fact_collateral_positions,collateral_type,Cash / Government Bonds / Corporate Bonds / Equities,
+22_fact_collateral_positions,collateral_value_usd,Collateral market value,
+22_fact_collateral_positions,haircut_pct,Applied haircut percentage,
+23_fact_order_book,order_id,Unique order identifier,PK
+23_fact_order_book,order_date,Order entry date,
+23_fact_order_book,account_id,Ordering account,FK -> 09_dim_accounts.account_id
+23_fact_order_book,instrument_id,Instrument ordered,FK -> 05_dim_instruments.instrument_id
+23_fact_order_book,trader_id,Placing trader,FK -> 02_dim_employees.employee_id
+23_fact_order_book,order_type,Market / Limit / Stop / Stop-Limit,
+23_fact_order_book,side,Buy / Sell,
+23_fact_order_book,quantity,Order quantity,
+23_fact_order_book,limit_price,Limit price if applicable,
+23_fact_order_book,order_status,Filled / Partially Filled / Cancelled / Rejected / Working,
+24_fact_audit_log,log_id,Unique audit log identifier,PK
+24_fact_audit_log,timestamp,Event timestamp,
+24_fact_audit_log,user_id,Acting user,FK -> 02_dim_employees.employee_id
+24_fact_audit_log,action,"LOGIN, LOGOUT, TRADE_CREATE, TRADE_AMEND, TRADE_CANCEL, REPORT_EXPORT, LIMIT_OVERRIDE, PASSWORD_RESET, CLIENT_UPDATE",
+24_fact_audit_log,entity_type,Trade / Account / Client / Report / System,
+24_fact_audit_log,entity_id,Related trade_id (sampled),FK -> 11_fact_trades.trade_id
+24_fact_audit_log,ip_address,Synthetic IPv4 address,
+25_fact_margin_calls,margin_call_id,Unique margin call identifier,PK
+25_fact_margin_calls,account_id,Called account,FK -> 09_dim_accounts.account_id
+25_fact_margin_calls,call_date,Call issuance date,
+25_fact_margin_calls,call_amount_usd,Margin call amount,
+25_fact_margin_calls,currency,Call currency (USD),
+25_fact_margin_calls,status,Met / Outstanding / Defaulted,
+25_fact_margin_calls,due_date,Call due date,
