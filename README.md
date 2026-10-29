@@ -96,9 +96,9 @@ The dataset can be used to investigate the following business questions:
 - What compliance alerts and KYC review statuses require attention?
 - How can data quality issues affect downstream financial reporting?
 
-## Suggested Repository Structure
+## Repository Structure
 
-text
+```text
 meridian-capital-markets-analytics/
 │
 ├── README.md
@@ -112,7 +112,7 @@ meridian-capital-markets-analytics/
 │
 └── dashboards/
     └── dashboard_screenshots/
-
+```
 
 ## Future Improvements
 
