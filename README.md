@@ -133,7 +133,13 @@ meridian-capital-markets-analytics/
 5. Run the Python profiling scripts or Jupyter Notebook.
 6. Use SQL queries to explore and analyze the data.
 
-**Security Note:** Never upload database passwords, API keys, or other sensitive credentials to GitHub.
+##  Data Dictionary
+
+The data dictionary provides column definitions and information about the structure of the 25 tables used in this project.
+
+It helps users understand the dataset, identify relevant columns, and explore relationships between tables.
+
+ **[View Data Dictionary](./data_dictionary.csv)**
 
 ## Project Disclaimer
 
